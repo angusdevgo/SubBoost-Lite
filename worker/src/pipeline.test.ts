@@ -950,9 +950,9 @@ describe("cache-hit path stays cheap", () => {
     const used = h.kv.operationCount - before;
 
     expect(result.kind).toBe("ok");
-    // 与源数量无关：tokidx + subs + config + cache + sources = 5。
+    // 与源数量无关：tokidx + subs + cache + sources = 4（config 走实例级缓存，不再计 KV 读）。
     // 全 manual 源时 resolveCachedInfo 会提前返回，连快照都不读。
-    expect(used).toBe(5);
+    expect(used).toBe(4);
   });
 
 
@@ -979,8 +979,8 @@ describe("cache-hit path stays cheap", () => {
 
     expect(second.kind).toBe("ok");
     if (second.kind !== "ok") return;
-    // 12 个 remote 源仍然只是 6 次操作（快照走一次批量读），不随源数量线性增长
-    expect(used).toBe(6);
+    // 12 个 remote 源仍然只是 5 次操作（config 走实例级缓存；快照走一次批量读），不随源数量线性增长
+    expect(used).toBe(5);
     expect(second.info).toEqual({ upload: 12, download: 24, total: 36 });
   });
   it("reads all snapshots with a single bulk KV operation", async () => {

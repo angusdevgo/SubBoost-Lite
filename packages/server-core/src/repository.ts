@@ -5,8 +5,31 @@
  * 都要用，两边各自写一份字符串迟早会漂移。
  */
 
+/** 默认仓库归属（owner/repo），fork 后可经环境变量 REPOSITORY_SLUG 覆盖 */
+export const DEFAULT_REPOSITORY_SLUG = "G1oow/SubBoost-Worker-Lite";
+
+/**
+ * 解析当前仓库归属。
+ *
+ * 优先级：`__REPOSITORY_SLUG__` 全局字面量（由构建工具的 define 在打包期注入，
+ * Vite: worker/ui/vite.config.ts）> 环境变量 `process.env.REPOSITORY_SLUG`
+ * （Worker 运行时与本地脚本）> 常量默认值。
+ * 这样在 fork 里只需设一个变量，页头 Logo 跳转、发布页入口与新版本检测
+ * 就会指向 fork 自身，不必改代码。
+ */
+declare const __REPOSITORY_SLUG__: string | undefined;
+
+export function resolveRepositorySlug(): string {
+  const fromDefine =
+    typeof __REPOSITORY_SLUG__ === "string" ? __REPOSITORY_SLUG__.trim() : "";
+  if (fromDefine && /^[\w.-]+\/[\w.-]+$/.test(fromDefine)) return fromDefine;
+  const fromEnv = globalThis.process?.env?.REPOSITORY_SLUG?.trim();
+  if (fromEnv && /^[\w.-]+\/[\w.-]+$/.test(fromEnv)) return fromEnv;
+  return DEFAULT_REPOSITORY_SLUG;
+}
+
 /** 仓库归属（owner/repo） */
-export const REPOSITORY_SLUG = "G1oow/SubBoost-Worker-Lite";
+export const REPOSITORY_SLUG = resolveRepositorySlug();
 
 /** 仓库主页 */
 export const REPOSITORY_URL = `https://github.com/${REPOSITORY_SLUG}`;

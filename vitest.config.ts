@@ -26,6 +26,8 @@ export default defineConfig({
   // 单测默认不是演示构建；演示相关代码用显式传入的常量走各自分支
   define: {
     __SUBBOOST_DEMO__: "false",
+    // 单测不注入仓库归属覆盖，repository.ts 回落到 env 或默认值
+    __REPOSITORY_SLUG__: "undefined",
   },
   test: {
     environment: "node",
