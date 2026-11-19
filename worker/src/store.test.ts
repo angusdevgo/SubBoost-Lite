@@ -283,6 +283,28 @@ describe("createStore TTLs and config", () => {
     expect(reset.isDefault).toBe(true);
   });
 
+  it("caches getConfig within one store instance and invalidates on write", async () => {
+    // 首次读取落缓存：1 次 KV 读
+    await store.getConfig();
+    const readsAfterFirst = kv.operationCount;
+    // 60 秒内重复读取应走实例缓存，不再消耗 KV 读
+    await store.getConfig();
+    await store.getConfig();
+    expect(kv.operationCount).toBe(readsAfterFirst);
+
+    // putConfig 同步缓存：写入后立即读到新值，无需再过 KV
+    await store.putConfig({ mixedPort: 7777 });
+    const opsAfterPut = kv.operationCount;
+    const afterWrite = await store.getConfig();
+    expect(afterWrite.config.mixedPort).toBe(7777);
+    expect(kv.operationCount).toBe(opsAfterPut);
+
+    // resetConfig 失效缓存：下一次 getConfig 必须回源拿默认值
+    await store.resetConfig();
+    const reset = await store.getConfig();
+    expect(reset.isDefault).toBe(true);
+  });
+
   it("acquires and releases the refresh lock", async () => {
     await expect(store.acquireLock("a")).resolves.toBe(true);
     await expect(store.acquireLock("b")).resolves.toBe(false);

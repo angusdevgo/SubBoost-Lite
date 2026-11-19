@@ -18,6 +18,11 @@ function themeInitPlugin() {
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 
+// 仓库归属：worker 端运行时读环境变量；UI 是构建期静态打包，必须用 define 注入。
+// 本地/CI 构建未设置时使用上游默认值。
+const repositorySlug =
+  process.env.REPOSITORY_SLUG?.trim() || "G1oow/SubBoost-Worker-Lite";
+
 // 演示 / 预览站开关：判定逻辑集中在 src/lib/demo-mode.ts（Vercel 构建环境即使
 // 没拿到 VITE_SUBBOOST_DEMO 也按演示构建，避免预览站退化成需 token 的正式版）。
 // 折叠成字面量常量，正式构建才能把演示代码整块摇掉。
@@ -28,6 +33,8 @@ export default defineConfig({
   root: configDir,
   define: {
     __SUBBOOST_DEMO__: JSON.stringify(demoMode),
+    // 把仓库归属编译成字面量，UI 里引用的 REPOSITORY_URL / docs 链接随之指向 fork 自身
+    __REPOSITORY_SLUG__: JSON.stringify(repositorySlug),
   },
   plugins: [react(), tailwindcss(), themeInitPlugin()],
   resolve: {

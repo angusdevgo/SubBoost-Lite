@@ -157,6 +157,7 @@ PowerShell 下第二步换成 `Copy-Item .dev.vars.example .dev.vars`。
 | `ENCRYPTION_KEY` | Secret | KV 落库字段的加密密钥（AES-256-GCM），至少 32 位随机串 |
 | `AGE_RECIPIENT` | 变量（可选） | age 收件公钥 `age1…`，逗号或空白分隔可配多把；留空则不启用加密输出 |
 | `AGE_ONLY` | 变量（可选） | 设为 `1` 时只输出 age 密文，明文订阅入口与一键导入返回 403 |
+| `REPOSITORY_SLUG` | 变量（可选） | 仓库归属 `owner/repo`。fork 部署时设为 fork 自身（构建期注入到管理端，例如 `angusdevgo/SubBoost-Lite`），页头 Logo、发布页链接与新版本检测随之指向 fork；缺省为上游 `G1oow/SubBoost-Worker-Lite` |
 
 两个 Secret 缺失时管理接口按 fail closed 返回 503；事后更换 `ENCRYPTION_KEY` 会导致已有数据无法解密，需要重新录入源与订阅。
 

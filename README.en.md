@@ -156,6 +156,7 @@ Both secrets are required; add them as Secret bindings in Worker → Settings �
 | `ENCRYPTION_KEY` | Secret | Key for stored-field encryption (AES-256-GCM), 32+ random characters |
 | `AGE_RECIPIENT` | Variable (optional) | age recipient key `age1…`; comma- or space-separated for multiple keys, empty disables encrypted output |
 | `AGE_ONLY` | Variable (optional) | Set to `1` to serve age ciphertext only; plaintext subscription and one-tap import return 403 |
+| `REPOSITORY_SLUG` | Variable (optional) | Repository slug `owner/repo`. For a fork deployment, set it to your fork (injected into the admin UI at build time, e.g. `angusdevgo/SubBoost-Lite`); the header logo, releases link and version check then point at the fork. Defaults to the upstream `G1oow/SubBoost-Worker-Lite` |
 
 With either secret missing, admin endpoints fail closed with 503. Replacing `ENCRYPTION_KEY` later makes existing data undecryptable, so sources and subscriptions must be re-entered.
 

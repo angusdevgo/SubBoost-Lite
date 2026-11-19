@@ -78,8 +78,16 @@ export function reorderByIds<T extends { id: string }>(items: T[], ids: string[]
   return ids.map((id) => byId.get(id)!);
 }
 
+/**
+ * 全局配置（KEY_CONFIG）只会通过管理端低频修改，但订阅请求每次都要读一次。
+ * Worker 同一实例会复用模块状态，故做 60 秒实例级缓存；写/重置时立即失效。
+ * 跨实例的偏差上限即 TTL 秒数，管理端保存后最差 60 秒内全边缘生效。
+ */
+const CONFIG_CACHE_TTL_MS = 60_000;
+
 export function createStore(env: Env) {
   const kv = env.SUBBOOST_KV;
+  let configCache: { value: { config: Record<string, unknown>; isDefault: boolean }; ts: number } | null = null;
 
   async function listStoredSources(): Promise<StoredSource[]> {
     return readJsonArray<StoredSource>(kv, KEY_SOURCES);
@@ -434,19 +442,24 @@ export function createStore(env: Env) {
   }
 
   async function getConfig(): Promise<{ config: Record<string, unknown>; isDefault: boolean }> {
+    const now = Date.now();
+    if (configCache && now - configCache.ts < CONFIG_CACHE_TTL_MS) return configCache.value;
     const stored = await readJson<Record<string, unknown>>(kv, KEY_CONFIG);
-    if (!isPlainObject(stored)) {
-      return { config: buildDefaultUserConfig("standard") as unknown as Record<string, unknown>, isDefault: true };
-    }
-    return { config: stored, isDefault: false };
+    const value = isPlainObject(stored)
+      ? { config: stored, isDefault: false }
+      : { config: buildDefaultUserConfig("standard") as unknown as Record<string, unknown>, isDefault: true };
+    configCache = { value, ts: now };
+    return value;
   }
 
   async function putConfig(config: Record<string, unknown>): Promise<void> {
     await kv.put(KEY_CONFIG, JSON.stringify(config));
+    configCache = { value: { config, isDefault: false }, ts: Date.now() };
   }
 
   async function resetConfig(): Promise<void> {
     await kv.delete(KEY_CONFIG);
+    configCache = null;
   }
 
   async function getSnapshot(sourceId: string): Promise<SnapshotRecord | null> {
