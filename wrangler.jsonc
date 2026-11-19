@@ -33,6 +33,10 @@
   // 密钥不进仓库：ADMIN_TOKEN / ENCRYPTION_KEY 必须用 `npx wrangler secret put <NAME>`
   // 或在 Cloudflare Dashboard → Worker → Settings → Variables and Secrets 里添加为 Secret 类型。
   "vars": { "APP_NAME": "SubBoost Lite" },
+  // 自定义域名绑定：Workers Custom Domain，DNS 与证书由 Cloudflare 自动管理
+  "routes": [
+    { "pattern": "vpn.066080.xyz", "custom_domain": true }
+  ],
   // 非生产分支由 `npx wrangler preview` 部署，该命令要求存在 previews 块（可以为空）。
   // 预览环境不继承顶层 vars / kv_namespaces / secrets；需要可用的预览运行时，
   // 在此补充 previews.kv_namespaces（指向独立 KV）并执行 `npx wrangler preview base-config secret put <NAME>`。
